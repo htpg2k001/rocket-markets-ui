@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rocket Markets — Real-Time Event Yield &amp; Prediction</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            void: '#05050A',
+            panel: '#0B0C14',
+            elevated: '#111320',
+            violet: '#7C5CFF',
+            mint: '#14F195',
+            crimson: '#FF3B6B',
+            limebtn: '#D4FF3F',
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body {
+      background-color: #05050A;
+      color: #F4F5FA;
+      font-family: 'Inter', system-ui, sans-serif;
+      overflow-x: hidden;
+    }
+    .tabular-nums { font-variant-numeric: tabular-nums; }
+    .pro-card {
+      background: linear-gradient(180deg, rgba(19, 21, 34, 0.88) 0%, rgba(11, 12, 20, 0.92) 100%);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 20px 50px -24px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    }
+    .pro-card-subtle {
+      background: rgba(14, 16, 28, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .grid-bg {
+      background-image:
+        linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(ellipse 80% 60% at 50% 10%, #000 40%, transparent 100%);
+      -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 10%, #000 40%, transparent 100%);
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.35); }
+    }
+    .live-dot { animation: pulse-dot 1.6s ease-in-out infinite; }
+    @keyframes float-rocket {
+      0%, 100% { transform: translateY(0px) rotate(-12deg); }
+      50% { transform: translateY(-5px) rotate(-9deg); }
+    }
+    .rocket-float { animation: float-rocket 3s ease-in-out infinite; }
+    input[type="range"] { accent-color: #7C5CFF; }
+  </style>
+</head>
+<body class="antialiased selection:bg-violet/30 selection:text-white relative">
+
+  <!-- Subtle Randomly Moving Ambient Light Background -->
+  <canvas id="ambient-bg-canvas" class="fixed inset-0 w-full h-full pointer-events-none z-0"></canvas>
+  <!-- Architectural Grid Overlay -->
+  <div class="fixed inset-0 grid-bg pointer-events-none z-0"></div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
+
+  <!-- How It Works Modal -->
+  <div id="how-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/75 backdrop-blur-md p-4">
+    <div class="pro-card rounded-3xl max-w-lg w-full p-6 space-y-5">
+      <div class="flex items-center justify-between border-b border-white/[0.08] pb-3.5">
+        <div class="flex items-center gap-2.5">
+          <span class="w-2 h-2 rounded-full bg-mint"></span>
+          <h3 class="text-base font-bold text-white tracking-tight">How Rocket Markets Works</h3>
+        </div>
+        <button id="close-how-modal" type="button" class="w-8 h-8 rounded-full bg-white/[0.06] text-gray-400 hover:text-white hover:bg-white/15 flex items-center justify-center text-xs font-bold transition-colors">✕</button>
+      </div>
+      <div class="space-y-3.5 text-sm text-gray-300 leading-relaxed">
+        <div class="p-3.5 rounded-2xl pro-card-subtle">
+          <div class="text-xs font-mono font-bold text-mint uppercase mb-1">01 • UNTIL ELON POSTS (Survivors)</div>
+          <p class="text-xs text-gray-300">Your deposit earns yield every second while <code class="text-white">@elonmusk</code> stays quiet. Cash out anytime to lock in your earnings.</p>
+        </div>
+        <div class="p-3.5 rounded-2xl pro-card-subtle">
+          <div class="text-xs font-mono font-bold text-crimson uppercase mb-1">02 • WHEN ELON POSTS (Detonators)</div>
+          <p class="text-xs text-gray-300">The first qualifying post triggers resolution — the market closes and unredeemed Survivor stakes transfer to Detonators.</p>
+        </div>
+        <div class="p-3.5 rounded-2xl pro-card-subtle">
+          <div class="text-xs font-mono font-bold text-amber-300 uppercase mb-1">03 • 10-Second Cash-Out Delay</div>
+          <p class="text-xs text-gray-300">Cashing out has a 10-seconds delay to ensure fair resolution for both sides.</p>
+        </div>
+      </div>
+      <button id="got-it-btn" type="button" class="w-full py-2.5 rounded-xl bg-white text-void font-bold text-sm hover:bg-mint transition-colors">Got it</button>
+    </div>
+  </div>
+
+  <!-- Top Utility Status Strip -->
+  <div class="relative z-20 border-b border-white/[0.05] bg-void/90 text-[11px] font-mono text-gray-400">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-8 flex items-center justify-between">
+      <div class="flex items-center gap-3 truncate">
+        <span class="inline-flex items-center gap-1.5 text-crimson font-semibold shrink-0">
+          <span class="w-1.5 h-1.5 rounded-full bg-crimson live-dot"></span>
+          LIVE MARKET
+        </span>
+        <span class="text-white/15">|</span>
+        <span class="truncate">Resolution source: <span class="text-gray-200">x.com/elonmusk</span> (Main posts, quotes, reposts, replies)</span>
+      </div>
+      <div class="hidden sm:flex items-center gap-4 shrink-0">
+        <span>Elapsed: <strong id="top-elapsed" class="text-white tabular-nums">00h:31m</strong></span>
+        <span>Fee: <strong class="text-mint">$0</strong></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Primary Sticky Navbar -->
+  <header class="sticky top-0 z-40 border-b border-white/[0.07] bg-void/80 backdrop-blur-xl">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-4">
+        <button id="logo-home-btn" type="button" class="flex items-center gap-2.5 shrink-0 text-left group">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-violet to-crimson flex items-center justify-center shadow-lg shadow-violet/25 group-hover:scale-105 transition-transform">
+            <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/>
+              <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>
+            </svg>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="font-extrabold tracking-[-0.02em] text-base sm:text-lg text-white">ROCKET MARKETS</span>
+            <span class="text-[10px] font-mono font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-white/[0.07] text-gray-300 border border-white/10">beta</span>
+          </div>
+        </button>
+
+        <nav class="hidden md:flex items-center p-1 rounded-xl bg-panel border border-white/[0.07]">
+          <button id="nav-market-btn" type="button" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-white/[0.1] text-white transition-all">Trade</button>
+          <button id="nav-profile-btn" type="button" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white transition-all">Portfolio &amp; History</button>
+        </nav>
+      </div>
+
+      <div class="flex items-center gap-2.5 shrink-0">
+        <button id="open-how-modal" type="button" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-xs font-medium text-gray-300 hover:text-white hover:bg-white/[0.08] transition-colors">
+          <span>ⓘ</span>
+          <span>How it works</span>
+        </button>
+
+        <!-- Mobile View Toggle -->
+        <button id="mobile-profile-btn" type="button" class="md:hidden px-2.5 py-1.5 rounded-xl bg-white/[0.06] border border-white/10 text-xs font-semibold text-gray-200">
+          Profile
+        </button>
+
+        <button id="wallet-btn" type="button" class="flex items-center gap-2 pl-3 pr-1.5 py-1.5 rounded-xl bg-panel border border-white/[0.12] hover:border-limebtn/50 transition-all">
+          <span class="w-2 h-2 rounded-full bg-mint"></span>
+          <span id="wallet-balance" class="font-mono font-bold text-xs sm:text-sm text-white tabular-nums">$2.1456</span>
+          <span class="px-2.5 py-1 rounded-lg bg-limebtn text-void font-bold text-xs flex items-center gap-1">
+            <span>Wallet</span>
+            <span>→</span>
+          </span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- VIEW 1: TRADE / MARKET ARENA -->
+  <main id="view-market" class="relative z-10 pt-6 pb-16 sm:pt-8 sm:pb-24">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+
+      <!-- Market Header Bar (Institutional Ticker Style) -->
+      <div class="pro-card rounded-2xl p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div class="flex items-center gap-3.5">
+          <div class="relative">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-900 border border-white/15 flex items-center justify-center font-extrabold text-white text-sm">
+              EM
+            </div>
+            <span class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-void border border-white/20 flex items-center justify-center text-[9px]">𝕏</span>
+          </div>
+          <div>
+            <div class="flex items-center gap-2 text-xs text-gray-400">
+              <span>Earn until</span>
+              <span>•</span>
+              <span class="text-mint font-mono">Resolves on next @elonmusk post</span>
+            </div>
+            <h1 class="text-xl sm:text-2xl font-extrabold tracking-[-0.02em] text-white mt-0.5">ELON MUSK POSTS ON X.COM</h1>
+          </div>
+        </div>
+
+        <!-- Key Market Metrics Strip -->
+        <div class="grid grid-cols-3 gap-4 sm:gap-6 pt-3 lg:pt-0 border-t lg:border-t-0 border-white/[0.07]">
+          <div>
+            <div class="text-[11px] text-gray-400">Total Pool</div>
+            <div class="text-base sm:text-lg font-mono font-bold text-white tabular-nums">$82.44</div>
+          </div>
+          <div>
+            <div class="text-[11px] text-gray-400">Hourly Yield</div>
+            <div class="text-base sm:text-lg font-mono font-bold text-mint tabular-nums">x2.76<span class="text-xs text-gray-400">/h</span></div>
+          </div>
+          <div>
+            <div class="text-[11px] text-gray-400">Round Time</div>
+            <div class="text-base sm:text-lg font-mono font-bold text-white tabular-nums">00h:31m</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Trading Workspace (8 cols Arena + 4 cols Order Ticket) -->
+      <div class="grid lg:grid-cols-12 gap-6 items-start">
+
+        <!-- Left 8 Cols: Live Trajectory Arena + Pool Tug-of-War + Rules/Holders -->
+        <div class="lg:col-span-8 space-y-6">
+
+          <!-- Live Rocket Trajectory & Yield Curve Card -->
+          <div class="pro-card rounded-3xl p-5 sm:p-6 relative overflow-hidden">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+              <div class="flex items-center gap-2.5">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-crimson/15 text-crimson border border-crimson/25 font-mono font-semibold text-xs">
+                  <span class="w-1.5 h-1.5 rounded-full bg-crimson live-dot"></span>
+                  LIVE TRAJECTORY
+                </span>
+                <span class="text-xs text-gray-400 font-mono">Scale: x2 — x7</span>
+              </div>
+              <div class="flex items-center gap-2 text-xs font-mono">
+                <span class="text-gray-400">Yield:</span>
+                <span class="px-2.5 py-1 rounded-lg bg-mint/10 border border-mint/25 text-mint font-bold tabular-nums">🔥 x2.76 / hr</span>
+              </div>
+            </div>
+
+            <!-- Interactive Trajectory Canvas + Rocket Overlay -->
+            <div class="relative rounded-2xl bg-void/90 border border-white/[0.06] p-4 h-64 sm:h-72 overflow-hidden flex flex-col justify-between">
+              <canvas id="trajectory-canvas" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
+
+              <!-- Multiplier Scale (x7 down to x2) -->
+              <div class="relative z-10 flex justify-between items-start h-full">
+                <div class="flex flex-col justify-between h-full py-1 text-[10px] font-mono text-gray-500">
+                  <span>x7</span>
+                  <span>x6</span>
+                  <span>x5</span>
+                  <span>x4</span>
+                  <span class="text-violet font-bold">x3</span>
+                  <span class="text-mint font-bold">x2</span>
+                </div>
+
+                <!-- Floating Rocket & Mars Target -->
+                <div class="flex-1 h-full relative flex items-center justify-center">
+                  <div class="rocket-float relative z-10 translate-x-4 -translate-y-2">
+                    <svg class="w-20 h-20 drop-shadow-[0_0_24px_rgba(20,241,149,0.35)]" viewBox="0 0 80 80" fill="none">
+                      <path d="M56 20C44 20 33 28 28 38L42 52C52 47 60 36 60 24L56 20Z" fill="url(#rocketGrad)" stroke="white" stroke-width="1.5"/>
+                      <circle cx="45" cy="35" r="5" fill="#05050A" stroke="#14F195" stroke-width="1.5"/>
+                      <path d="M28 38L18 42L24 48L28 38Z" fill="#7C5CFF"/>
+                      <path d="M42 52L38 62L32 56L42 52Z" fill="#7C5CFF"/>
+                      <path d="M24 48C18 52 14 58 14 62C18 62 24 58 28 52" fill="#FF8A00"/>
+                      <defs>
+                        <linearGradient id="rocketGrad" x1="28" y1="20" x2="60" y2="52" gradientUnits="userSpaceOnUse">
+                          <stop stop-color="#F4F5FA"/>
+                          <stop offset="1" stop-color="#7C5CFF"/>
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                  </div>
+                </div>
+
+                <!-- Mars Planet + Current Multiplier Callout -->
+                <div class="flex flex-col items-end justify-between h-full">
+                  <div class="text-right">
+                    <div class="text-[10px] font-mono uppercase tracking-wider text-gray-400">Current Rate</div>
+                    <div class="text-2xl sm:text-3xl font-mono font-extrabold text-mint tabular-nums">x2.76</div>
+                  </div>
+                  <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-orange-400 via-crimson to-purple-950 opacity-90 shadow-xl shadow-crimson/25 border border-white/10"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Timeline Strip (29m - 34m) -->
+            <div class="mt-4 flex items-center gap-2 bg-void/80 border border-white/[0.06] rounded-xl p-1.5">
+              <span class="px-2.5 py-1 rounded-lg bg-white text-void font-mono font-bold text-[11px] flex items-center gap-1 shrink-0">
+                <span class="w-1.5 h-1.5 rounded-full bg-crimson live-dot"></span>
+                Live
+              </span>
+              <div class="grid grid-cols-6 gap-1 w-full text-center text-xs font-mono">
+                <span class="py-1 rounded-md text-gray-500">29m</span>
+                <span class="py-1 rounded-md text-gray-400">30m</span>
+                <span class="py-1 rounded-md bg-crimson/20 text-crimson border border-crimson/35 font-bold">31m</span>
+                <span class="py-1 rounded-md text-gray-400">32m</span>
+                <span class="py-1 rounded-md text-gray-400">33m</span>
+                <span class="py-1 rounded-md text-gray-500">34m</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pool Liquidity Bar -->
+          <div class="pro-card rounded-3xl p-5 space-y-3.5">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <h2 class="text-sm font-bold text-white uppercase tracking-wider">Pool Liquidity</h2>
+                <span class="text-xs text-gray-400">• Survivors vs Detonators</span>
+              </div>
+              <div class="text-sm font-mono text-gray-300">Total size <strong class="text-white tabular-nums">$82.44</strong></div>
+            </div>
+
+            <div class="h-3 w-full rounded-full bg-void overflow-hidden flex border border-white/10 p-0.5">
+              <div class="h-full rounded-l-full bg-gradient-to-r from-mint to-emerald-400" style="width: 16.9%"></div>
+              <div class="h-full rounded-r-full bg-gradient-to-r from-rose-500 to-crimson" style="width: 83.1%"></div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 text-xs sm:text-sm">
+              <div class="rounded-2xl pro-card-subtle p-3.5 flex items-center justify-between">
+                <div>
+                  <div class="text-mint font-semibold text-xs">🚀 Survivors</div>
+                  <div class="text-lg font-mono font-extrabold text-white tabular-nums mt-0.5">$13.95</div>
+                </div>
+                <span class="text-[11px] font-mono text-mint bg-mint/10 border border-mint/20 px-2 py-1 rounded-lg">16.9%</span>
+              </div>
+
+              <div class="rounded-2xl pro-card-subtle p-3.5 flex items-center justify-between">
+                <div>
+                  <div class="text-crimson font-semibold text-xs">🧨 Detonators</div>
+                  <div class="text-lg font-mono font-extrabold text-white tabular-nums mt-0.5">$68.49</div>
+                </div>
+                <span class="text-[11px] font-mono text-crimson bg-crimson/10 border border-crimson/20 px-2 py-1 rounded-lg">83.1%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Rules / Holders / Chat Section -->
+          <section id="rules-section" class="pro-card rounded-3xl p-5 sm:p-6 space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.07] pb-3.5">
+              <div class="inline-flex p-1 rounded-xl bg-void border border-white/[0.08]">
+                <button type="button" data-info-tab="rules" class="info-tab px-4 py-1.5 rounded-lg text-xs font-bold bg-white text-void">Rules</button>
+                <button type="button" data-info-tab="holders" class="info-tab px-4 py-1.5 rounded-lg text-xs font-bold text-gray-400 hover:text-white">Holders</button>
+                <button type="button" data-info-tab="chat" class="info-tab px-4 py-1.5 rounded-lg text-xs font-bold text-gray-400 hover:text-white flex items-center gap-1.5">
+                  <span>Chat</span>
+                  <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-400/15 text-amber-300 border border-amber-400/25">coming soon</span>
+                </button>
+              </div>
+              <span class="text-xs text-gray-400">Source: <span class="text-violet font-mono">x.com/elonmusk</span></span>
+            </div>
+
+            <div id="info-panel-rules" class="text-sm text-gray-300 leading-relaxed space-y-3">
+              <p>Survivors earn yield every second until <strong class="text-white">@elonmusk</strong> posts on X. The first qualifying post triggers resolution — the market closes and unredeemed Survivor stakes transfer to Detonators.</p>
+              <p><strong class="text-white">What counts:</strong> main feed posts, quote posts, reposts and replies. Deleted posts always count — resolution is triggered at the moment of publication, regardless of whether the post is later deleted.</p>
+            </div>
+
+            <div id="info-panel-holders" class="hidden text-sm text-gray-300">
+              <div class="grid sm:grid-cols-2 gap-3">
+                <div class="rounded-xl pro-card-subtle p-3.5 flex justify-between items-center">
+                  <span class="font-mono text-xs text-gray-300">0x84A...21F • Survivor</span>
+                  <span class="font-mono text-xs font-bold text-mint">$8.95</span>
+                </div>
+                <div class="rounded-xl pro-card-subtle p-3.5 flex justify-between items-center">
+                  <span class="font-mono text-xs text-gray-300">0x39C...77B • Detonator</span>
+                  <span class="font-mono text-xs font-bold text-crimson">$42.00</span>
+                </div>
+              </div>
+            </div>
+
+            <div id="info-panel-chat" class="hidden text-sm text-gray-400 py-4 text-center">
+              Live market chat is coming soon.
+            </div>
+          </section>
+
+        </div>
+
+        <!-- Right 4 Cols: Sticky Order Execution & Live Position Terminal -->
+        <div class="lg:col-span-4 space-y-5 lg:sticky lg:top-20">
+
+          <!-- Live Earnings & Cash-Out Card -->
+          <div class="pro-card rounded-3xl p-5 space-y-4">
+            <div class="flex items-center justify-between">
+              <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-300">
+                <span class="w-2 h-2 rounded-full bg-crimson live-dot"></span>
+                Live earnings
+              </span>
+              <span id="live-earnings-counter" class="text-xl font-mono font-extrabold text-mint tabular-nums">$0.970258</span>
+            </div>
+
+            <div class="space-y-2 text-xs border-y border-white/[0.07] py-3">
+              <div class="flex justify-between">
+                <span class="text-gray-400">Order size</span>
+                <span class="font-mono font-semibold text-white">$1</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-400">Current yield rate</span>
+                <span class="font-mono font-semibold text-mint">x2.76/h</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-400">Live for 🚀</span>
+                <span class="font-mono font-semibold text-white tabular-nums">00h:14m</span>
+              </div>
+            </div>
+
+            <button id="cashout-btn" type="button" class="w-full py-3 rounded-2xl bg-crimson text-white font-extrabold text-sm tracking-wide hover:brightness-110 transition-all shadow-lg shadow-crimson/20">
+              CASH OUT
+            </button>
+
+            <!-- Interactive 10s Cash-Out Countdown Bar -->
+            <div id="cashout-delay-bar" class="hidden space-y-1.5">
+              <div class="flex justify-between text-[11px] font-mono text-amber-300">
+                <span>Cash-out delay active...</span>
+                <span id="cashout-countdown">10s</span>
+              </div>
+              <div class="h-1.5 w-full rounded-full bg-void overflow-hidden">
+                <div id="cashout-progress" class="h-full bg-amber-300 transition-all duration-1000" style="width: 100%"></div>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-1 text-xs text-gray-400">
+              <button id="prev-pos" type="button" class="w-7 h-7 rounded-full bg-white/[0.06] hover:bg-white/15 flex items-center justify-center text-white transition-colors">←</button>
+              <div class="flex items-center gap-1.5" id="pos-dots">
+                <span class="w-2 h-2 rounded-full bg-white"></span>
+                <span class="w-2 h-2 rounded-full bg-white/25"></span>
+                <span class="w-2 h-2 rounded-full bg-white/25"></span>
+              </div>
+              <button id="next-pos" type="button" class="w-7 h-7 rounded-full bg-white/[0.06] hover:bg-white/15 flex items-center justify-center text-white transition-colors">→</button>
+            </div>
+          </div>
+
+          <!-- Open Position Terminal (YOU EARN) -->
+          <div class="pro-card rounded-3xl p-5 space-y-4">
+            <div class="flex items-center justify-between">
+              <h2 class="text-xs font-extrabold uppercase tracking-widest text-gray-200">YOU EARN</h2>
+              <span class="text-xs text-gray-400">Balance: <strong class="text-white font-mono">$2.14</strong> <button id="deposit-link" type="button" class="text-violet underline ml-1">Deposit</button></span>
+            </div>
+
+            <div class="grid grid-cols-2 p-1 rounded-2xl bg-void border border-white/[0.08]">
+              <button id="tab-until" type="button" class="py-2 rounded-xl text-xs font-extrabold transition-all bg-white text-void shadow">
+                UNTIL <span class="block text-[10px] font-medium opacity-75">ELON POSTS</span>
+              </button>
+              <button id="tab-when" type="button" class="py-2 rounded-xl text-xs font-extrabold transition-all text-gray-400 hover:text-white">
+                WHEN <span class="block text-[10px] font-medium opacity-75">ELON POSTS</span>
+              </button>
+            </div>
+
+            <div id="side-explainer" class="rounded-2xl pro-card-subtle p-3 space-y-1.5 text-xs text-gray-300">
+              <p>⏳ Your deposit <strong class="text-mint">earns yield</strong> every second until Elon tweets.</p>
+              <p>💰 Cash out anytime — but once Elon tweets, your deposit is gone.</p>
+            </div>
+
+            <div class="space-y-2.5">
+              <div class="flex items-center justify-between bg-void border border-white/15 rounded-2xl px-4 py-2.5">
+                <button id="set-min" type="button" class="text-[11px] font-mono text-gray-400 hover:text-white">min: $1</button>
+                <div class="flex items-center font-mono font-extrabold text-xl text-white">
+                  <span>$</span>
+                  <input id="order-amount" type="number" min="1" max="10" step="1" value="1" class="w-14 bg-transparent text-center focus:outline-none tabular-nums" />
+                </div>
+                <button id="set-max" type="button" class="text-[11px] font-mono text-gray-400 hover:text-white">max: $10</button>
+              </div>
+
+              <div class="grid grid-cols-4 gap-1.5">
+                <button type="button" data-preset="1" class="preset-btn py-1.5 rounded-xl text-xs font-mono font-semibold bg-white/10 text-white border border-white/20">$1</button>
+                <button type="button" data-preset="2" class="preset-btn py-1.5 rounded-xl text-xs font-mono font-semibold bg-white/[0.04] text-gray-400 hover:text-white border border-white/[0.06]">$2</button>
+                <button type="button" data-preset="5" class="preset-btn py-1.5 rounded-xl text-xs font-mono font-semibold bg-white/[0.04] text-gray-400 hover:text-white border border-white/[0.06]">$5</button>
+                <button type="button" data-preset="10" class="preset-btn py-1.5 rounded-xl text-xs font-mono font-semibold bg-white/[0.04] text-gray-400 hover:text-white border border-white/[0.06]">$10</button>
+              </div>
+            </div>
+
+            <div class="space-y-1.5 text-xs pt-1 border-t border-white/[0.07]">
+              <div class="text-gray-400 font-medium mb-1">Position review</div>
+              <div class="flex justify-between">
+                <span class="text-gray-400">Order size</span>
+                <span id="review-size" class="font-mono font-bold text-white">$1</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-400">Current yield rate</span>
+                <span id="review-rate" class="font-mono font-bold text-mint">x2.77/h</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-400">Fee</span>
+                <span class="font-mono font-bold text-white">$0</span>
+              </div>
+            </div>
+
+            <button id="buy-btn" type="button" class="w-full py-3.5 rounded-2xl bg-limebtn text-void font-extrabold text-sm tracking-wide hover:brightness-105 transition-all shadow-lg shadow-limebtn/15">
+              BUY
+            </button>
+
+            <p class="text-[11px] text-gray-400 leading-relaxed">
+              Your deposit earns yield while @elonmusk stays quiet. Cash out any time to lock in your earnings. If he posts before you cash out, your deposit transfers to Detonators. <strong class="text-amber-300">Note: Cashing out has a 10-seconds delay.</strong>
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- VIEW 2: PORTFOLIO & POSITIONS HISTORY -->
+  <section id="view-profile" class="hidden relative z-10 pt-8 pb-20 sm:pt-10">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+
+      <!-- Profile Top Identity Bar -->
+      <div class="pro-card rounded-3xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+          <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-fuchsia-500 to-violet shadow-lg shadow-violet/30 shrink-0"></div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-mono font-bold text-base sm:text-lg text-white">0x01b...4c09a</span>
+              <button id="copy-addr-btn" type="button" class="p-1.5 rounded-lg bg-white/[0.06] hover:bg-white/15 text-gray-300 text-xs transition-colors" title="Copy address">❐</button>
+            </div>
+            <div class="text-xs text-gray-400 mt-0.5">Joined Oct 13, 2026</div>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="flex items-center gap-2 px-3.5 py-2 rounded-xl pro-card-subtle text-xs">
+            <span class="text-gray-300 font-medium">Referral program</span>
+            <span class="px-2 py-0.5 rounded-full bg-violet/20 text-violet border border-violet/30 font-mono text-[10px]">Coming soon</span>
+          </div>
+          <button id="logout-btn" type="button" class="px-4 py-2 rounded-xl bg-white/[0.06] hover:bg-crimson/20 hover:text-crimson border border-white/10 text-xs font-semibold text-white transition-all">
+            Log out
+          </button>
+        </div>
+      </div>
+
+      <!-- Balance & Stats Bento Grid -->
+      <div class="grid md:grid-cols-12 gap-5">
+        <div class="md:col-span-7 pro-card rounded-3xl p-6 flex flex-col justify-between gap-6">
+          <div class="flex items-start justify-between">
+            <div>
+              <div class="text-xs font-medium text-gray-400">Your balance</div>
+              <div class="mt-1.5 text-3xl sm:text-4xl font-mono font-extrabold text-white tabular-nums tracking-tight">$2.14</div>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-violet/15 border border-violet/30 flex items-center justify-center text-xl">💰</div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4 py-3.5 border-y border-white/[0.07]">
+            <div>
+              <div class="text-lg sm:text-xl font-mono font-extrabold text-crimson tabular-nums">🚀 -$4.58</div>
+              <div class="text-xs text-gray-400 mt-0.5">Realized P&amp;L</div>
+            </div>
+            <div>
+              <div class="text-lg sm:text-xl font-mono font-extrabold text-white tabular-nums">🔥 $0.27</div>
+              <div class="text-xs text-gray-400 mt-0.5">Positions value</div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <button id="profile-deposit-btn" type="button" class="py-3 rounded-xl bg-mint text-void font-extrabold text-xs sm:text-sm tracking-wide hover:brightness-110 transition-all">
+              DEPOSIT
+            </button>
+            <button id="profile-withdraw-btn" type="button" class="py-3 rounded-xl bg-white/[0.06] hover:bg-white/15 border border-white/10 text-white font-extrabold text-xs sm:text-sm tracking-wide transition-all">
+              WITHDRAW
+            </button>
+          </div>
+        </div>
+
+        <div class="md:col-span-5 pro-card rounded-3xl p-6 flex flex-col justify-between divide-y divide-white/[0.07]">
+          <div class="pb-4 flex items-center justify-between">
+            <span class="text-xs text-gray-400">Volume</span>
+            <span class="text-xl font-mono font-extrabold text-white tabular-nums">🔥 $578.7</span>
+          </div>
+          <div class="py-4 flex items-center justify-between">
+            <span class="text-xs text-gray-400">Biggest hit</span>
+            <span class="text-xl font-mono font-extrabold text-mint tabular-nums">💥 x18.85</span>
+          </div>
+          <div class="pt-4 flex items-center justify-between">
+            <span class="text-xs text-gray-400">Total bets</span>
+            <span class="text-xl font-mono font-extrabold text-white tabular-nums">🟢 416</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Positions History Section -->
+      <div class="space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <h2 class="text-lg font-extrabold text-white tracking-tight">Positions history</h2>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <div class="inline-flex p-1 rounded-xl bg-panel border border-white/10">
+              <button type="button" data-hist-tab="active" class="hist-tab px-3 py-1.5 rounded-lg text-xs font-bold text-gray-400 hover:text-white">
+                Active <span class="font-mono opacity-80">1</span>
+              </button>
+              <button type="button" data-hist-tab="closed" class="hist-tab px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-void">
+                Closed <span class="font-mono opacity-80">415</span>
+              </button>
+            </div>
+
+            <select id="filter-side" class="px-3 py-2 rounded-xl bg-panel border border-white/10 text-xs font-medium text-gray-200 focus:outline-none">
+              <option value="all">Survivor &amp; Detonator</option>
+              <option value="Survivor">Survivor only</option>
+              <option value="Detonator">Detonator only</option>
+            </select>
+
+            <select id="filter-outcome" class="px-3 py-2 rounded-xl bg-panel border border-white/10 text-xs font-medium text-gray-200 focus:outline-none">
+              <option value="all">W/L: All</option>
+              <option value="Won">Won</option>
+              <option value="Lost">Lost</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="pro-card rounded-3xl overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-white/[0.07] text-[11px] font-mono uppercase tracking-wider text-gray-400">
+                  <th class="py-3.5 px-4">Outcome</th>
+                  <th class="py-3.5 px-4">Market</th>
+                  <th class="py-3.5 px-4">Live for</th>
+                  <th class="py-3.5 px-4">Bet</th>
+                  <th class="py-3.5 px-4">Return</th>
+                  <th class="py-3.5 px-4 text-right">Payout</th>
+                </tr>
+              </thead>
+              <tbody id="history-tbody" class="divide-y divide-white/[0.06] text-xs sm:text-sm"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <footer class="relative z-10 border-t border-white/[0.07] py-6 text-center text-xs text-gray-500">
+    Rocket Markets Rules
+  </footer>
+
+  <script>
+    (function () {
+      const state = {
+        view: 'market',
+        side: 'until',
+        earnings: 0.970258,
+        posIndex: 0,
+        histTab: 'closed',
+        sideFilter: 'all',
+        outcomeFilter: 'all',
+        cashoutTimer: null
+      };
+
+      const historyData = [
+        { status: 'active', outcome: 'Live', side: 'Survivor', market: 'ELON MUSK POSTS ON X.COM', time: '17 Nov 03:12–Live', liveFor: '14m', bet: '$1', ret: 'x2.76', payout: '+$0.97', positive: true },
+        { status: 'closed', outcome: 'Won', side: 'Survivor', market: 'ELON MUSK POSTS ON X.COM', time: '17 Nov 03:03–03:20 (00h:17m)', liveFor: '17m', bet: '$1', ret: 'x2.15', payout: '+$1.15', positive: true },
+        { status: 'closed', outcome: 'Lost', side: 'Survivor', market: 'ELON MUSK POSTS ON X.COM', time: '17 Nov 02:18–02:41 (00h:23m)', liveFor: '23m', bet: '$2', ret: 'x0.00', payout: '-$2.00', positive: false },
+        { status: 'closed', outcome: 'Won', side: 'Detonator', market: 'ELON MUSK POSTS ON X.COM', time: '17 Nov 01:40–01:54 (00h:14m)', liveFor: '14m', bet: '$1', ret: 'x3.10', payout: '+$2.10', positive: true }
+      ];
+
+      function showToast(msg, tone) {
+        const container = document.getElementById('toast-container');
+        const el = document.createElement('div');
+        const cls = tone === 'error' ? 'border-crimson/50 text-crimson' : 'border-mint/40 text-mint';
+        el.className = `pointer-events-auto pro-card ${cls} rounded-xl px-4 py-3 text-xs font-medium shadow-2xl`;
+        el.textContent = msg;
+        container.appendChild(el);
+        setTimeout(() => el.remove(), 3000);
+      }
+
+      // View switcher
+      const viewMarket = document.getElementById('view-market');
+      const viewProfile = document.getElementById('view-profile');
+      const navMarketBtn = document.getElementById('nav-market-btn');
+      const navProfileBtn = document.getElementById('nav-profile-btn');
+
+      function setView(v) {
+        state.view = v;
+        viewMarket.classList.toggle('hidden', v !== 'market');
+        viewProfile.classList.toggle('hidden', v !== 'profile');
+        navMarketBtn.className = v === 'market'
+          ? 'px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-white/[0.1] text-white transition-all'
+          : 'px-3.5 py-1.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white transition-all';
+        navProfileBtn.className = v === 'profile'
+          ? 'px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-white/[0.1] text-white transition-all'
+          : 'px-3.5 py-1.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white transition-all';
+        document.getElementById('mobile-profile-btn').textContent = v === 'market' ? 'Profile' : 'Trade';
+      }
+
+      navMarketBtn.addEventListener('click', () => setView('market'));
+      document.getElementById('logo-home-btn').addEventListener('click', () => setView('market'));
+      navProfileBtn.addEventListener('click', () => setView('profile'));
+      document.getElementById('mobile-profile-btn').addEventListener('click', () => setView(state.view === 'market' ? 'profile' : 'market'));
+      document.getElementById('wallet-btn').addEventListener('click', () => setView(state.view === 'market' ? 'profile' : 'market'));
+
+      // Live earnings tick
+      setInterval(() => {
+        state.earnings += 0.000766;
+        document.getElementById('live-earnings-counter').textContent = `$${state.earnings.toFixed(6)}`;
+      }, 1000);
+
+      // Modal
+      const modal = document.getElementById('how-modal');
+      document.getElementById('open-how-modal').addEventListener('click', () => { modal.classList.remove('hidden'); modal.classList.add('flex'); });
+      ['close-how-modal', 'got-it-btn'].forEach(id => {
+        document.getElementById(id).addEventListener('click', () => { modal.classList.add('hidden'); modal.classList.remove('flex'); });
+      });
+
+      // UNTIL / WHEN toggle
+      const tabUntil = document.getElementById('tab-until');
+      const tabWhen = document.getElementById('tab-when');
+      const explainer = document.getElementById('side-explainer');
+      const rateEl = document.getElementById('review-rate');
+
+      function renderSide() {
+        if (state.side === 'until') {
+          tabUntil.className = 'py-2 rounded-xl text-xs font-extrabold transition-all bg-white text-void shadow';
+          tabWhen.className = 'py-2 rounded-xl text-xs font-extrabold transition-all text-gray-400 hover:text-white';
+          explainer.innerHTML = '<p>⏳ Your deposit <strong class="text-mint">earns yield</strong> every second until Elon tweets.</p><p>💰 Cash out anytime — but once Elon tweets, your deposit is gone.</p>';
+          rateEl.textContent = 'x2.77/h';
+          rateEl.className = 'font-mono font-bold text-mint';
+        } else {
+          tabWhen.className = 'py-2 rounded-xl text-xs font-extrabold transition-all bg-crimson text-white shadow';
+          tabUntil.className = 'py-2 rounded-xl text-xs font-extrabold transition-all text-gray-400 hover:text-white';
+          explainer.innerHTML = '<p>🧨 You win when <strong class="text-crimson">@elonmusk posts</strong> on X.</p><p>💰 Unredeemed Survivor stakes transfer to Detonators upon resolution.</p>';
+          rateEl.textContent = 'Detonator Pool';
+          rateEl.className = 'font-mono font-bold text-crimson';
+        }
+      }
+      tabUntil.addEventListener('click', () => { state.side = 'until'; renderSide(); });
+      tabWhen.addEventListener('click', () => { state.side = 'when'; renderSide(); });
+
+      // Order size controls
+      const amtInput = document.getElementById('order-amount');
+      function syncAmount() {
+        const val = Math.max(1, Math.min(10, Number(amtInput.value) || 1));
+        document.getElementById('review-size').textContent = `$${val}`;
+        document.querySelectorAll('.preset-btn').forEach(b => {
+          b.className = Number(b.dataset.preset) === val
+            ? 'preset-btn py-1.5 rounded-xl text-xs font-mono font-semibold bg-white/15 text-white border border-white/30'
+            : 'preset-btn py-1.5 rounded-xl text-xs font-mono font-semibold bg-white/[0.04] text-gray-400 hover:text-white border border-white/[0.06]';
+        });
+      }
+      amtInput.addEventListener('input', syncAmount);
+      document.getElementById('set-min').addEventListener('click', () => { amtInput.value = 1; syncAmount(); });
+      document.getElementById('set-max').addEventListener('click', () => { amtInput.value = 10; syncAmount(); });
+      document.querySelectorAll('.preset-btn').forEach(btn => {
+        btn.addEventListener('click', () => { amtInput.value = btn.dataset.preset; syncAmount(); });
+      });
+
+      document.getElementById('buy-btn').addEventListener('click', () => {
+        showToast(`Opened $${amtInput.value} position on ${state.side === 'until' ? 'UNTIL ELON POSTS' : 'WHEN ELON POSTS'}.`);
+      });
+
+      // Cash Out with visual 10s delay bar
+      document.getElementById('cashout-btn').addEventListener('click', () => {
+        if (state.cashoutTimer) clearInterval(state.cashoutTimer);
+        let secs = 10;
+        const bar = document.getElementById('cashout-delay-bar');
+        const label = document.getElementById('cashout-countdown');
+        const prog = document.getElementById('cashout-progress');
+        bar.classList.remove('hidden');
+        label.textContent = `${secs}s`;
+        prog.style.width = '100%';
+        showToast(`Cash Out requested ($${state.earnings.toFixed(4)}) — 10s delay started.`);
+        state.cashoutTimer = setInterval(() => {
+          secs -= 1;
+          if (secs <= 0) {
+            clearInterval(state.cashoutTimer);
+            state.cashoutTimer = null;
+            bar.classList.add('hidden');
+            showToast(`Cash Out settled: $${state.earnings.toFixed(4)}!`);
+          } else {
+            label.textContent = `${secs}s`;
+            prog.style.width = `${secs * 10}%`;
+          }
+        }, 1000);
+      });
+
+      document.getElementById('deposit-link').addEventListener('click', () => setView('profile'));
+
+      // Carousel
+      const dots = document.getElementById('pos-dots').children;
+      function updateDots() {
+        for (let i = 0; i < dots.length; i++) {
+          dots[i].className = i === state.posIndex ? 'w-2 h-2 rounded-full bg-white' : 'w-2 h-2 rounded-full bg-white/25';
+        }
+      }
+      document.getElementById('prev-pos').addEventListener('click', () => { state.posIndex = (state.posIndex + 2) % 3; updateDots(); });
+      document.getElementById('next-pos').addEventListener('click', () => { state.posIndex = (state.posIndex + 1) % 3; updateDots(); });
+
+      // Rules / Holders / Chat
+      document.querySelectorAll('.info-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const target = btn.dataset.infoTab;
+          document.querySelectorAll('.info-tab').forEach(b => {
+            b.className = b === btn
+              ? 'info-tab px-4 py-1.5 rounded-lg text-xs font-bold bg-white text-void flex items-center gap-1.5'
+              : 'info-tab px-4 py-1.5 rounded-lg text-xs font-bold text-gray-400 hover:text-white flex items-center gap-1.5';
+          });
+          ['rules', 'holders', 'chat'].forEach(p => {
+            document.getElementById(`info-panel-${p}`).classList.toggle('hidden', p !== target);
+          });
+        });
+      });
+
+      // Profile Actions
+      document.getElementById('copy-addr-btn').addEventListener('click', () => showToast('Copied address 0x01b...4c09a'));
+      document.getElementById('profile-deposit-btn').addEventListener('click', () => showToast('Deposit modal ready for 0x01b...4c09a.'));
+      document.getElementById('profile-withdraw-btn').addEventListener('click', () => showToast('Withdraw available balance: $2.14.'));
+      document.getElementById('logout-btn').addEventListener('click', () => { showToast('Logged out of 0x01b...4c09a.'); setView('market'); });
+
+      // History Table
+      function renderHistory() {
+        const tbody = document.getElementById('history-tbody');
+        const rows = historyData.filter(r => {
+          if (r.status !== state.histTab) return false;
+          if (state.sideFilter !== 'all' && r.side !== state.sideFilter) return false;
+          if (state.outcomeFilter !== 'all' && r.outcome !== state.outcomeFilter) return false;
+          return true;
+        });
+
+        if (!rows.length) {
+          tbody.innerHTML = '<tr><td colspan="6" class="py-8 text-center text-xs text-gray-400">No positions match this filter.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = rows.map(r => {
+          const badge = r.outcome === 'Won'
+            ? '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-mint/15 text-mint border border-mint/30 text-xs font-bold">✓ Won</span>'
+            : r.outcome === 'Live'
+              ? '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-violet/20 text-violet border border-violet/30 text-xs font-bold">● Live</span>'
+              : '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-crimson/15 text-crimson border border-crimson/30 text-xs font-bold">✕ Lost</span>';
+
+          return `
+            <tr class="hover:bg-white/[0.02] transition-colors">
+              <td class="py-3.5 px-4">${badge}</td>
+              <td class="py-3.5 px-4">
+                <div class="font-bold text-white text-xs sm:text-sm">${r.market}</div>
+                <div class="text-[11px] text-gray-400 font-mono mt-0.5">${r.time} • <span class="text-gray-300">${r.side}</span></div>
+              </td>
+              <td class="py-3.5 px-4 font-mono text-gray-200 tabular-nums">${r.liveFor}</td>
+              <td class="py-3.5 px-4 font-mono font-semibold text-white tabular-nums">${r.bet}</td>
+              <td class="py-3.5 px-4 font-mono text-gray-200 tabular-nums">${r.ret}</td>
+              <td class="py-3.5 px-4 text-right font-mono font-bold tabular-nums ${r.positive ? 'text-mint' : 'text-crimson'}">${r.payout}</td>
+            </tr>
+          `;
+        }).join('');
+      }
+      renderHistory();
+
+      document.querySelectorAll('.hist-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.histTab = btn.dataset.histTab;
+          document.querySelectorAll('.hist-tab').forEach(b => {
+            b.className = b === btn
+              ? 'hist-tab px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-void'
+              : 'hist-tab px-3 py-1.5 rounded-lg text-xs font-bold text-gray-400 hover:text-white';
+          });
+          renderHistory();
+        });
+      });
+      document.getElementById('filter-side').addEventListener('change', (e) => { state.sideFilter = e.target.value; renderHistory(); });
+      document.getElementById('filter-outcome').addEventListener('change', (e) => { state.outcomeFilter = e.target.value; renderHistory(); });
+
+      // Trajectory Yield Curve Canvas inside Arena
+      const tCanvas = document.getElementById('trajectory-canvas');
+      const tCtx = tCanvas.getContext('2d');
+      function drawTrajectory() {
+        tCanvas.width = tCanvas.offsetWidth;
+        tCanvas.height = tCanvas.offsetHeight;
+        const w = tCanvas.width;
+        const h = tCanvas.height;
+        tCtx.clearRect(0, 0, w, h);
+
+        // Subtle horizontal gridlines
+        tCtx.strokeStyle = 'rgba(255,255,255,0.04)';
+        tCtx.lineWidth = 1;
+        for (let i = 1; i <= 5; i++) {
+          const y = (h / 6) * i;
+          tCtx.beginPath();
+          tCtx.moveTo(24, y);
+          tCtx.lineTo(w - 24, y);
+          tCtx.stroke();
+        }
+
+        // Smooth yield curve
+        const grad = tCtx.createLinearGradient(0, h, w, 0);
+        grad.addColorStop(0, 'rgba(124, 92, 255, 0.25)');
+        grad.addColorStop(0.55, 'rgba(20, 241, 149, 0.85)');
+        grad.addColorStop(1, 'rgba(20, 241, 149, 1)');
+
+        tCtx.strokeStyle = grad;
+        tCtx.lineWidth = 2.5;
+        tCtx.beginPath();
+        tCtx.moveTo(28, h * 0.86);
+        tCtx.bezierCurveTo(w * 0.35, h * 0.78, w * 0.55, h * 0.55, w * 0.72, h * 0.34);
+        tCtx.stroke();
+
+        // Area fill under curve
+        const fillGrad = tCtx.createLinearGradient(0, h * 0.34, 0, h);
+        fillGrad.addColorStop(0, 'rgba(20, 241, 149, 0.14)');
+        fillGrad.addColorStop(1, 'rgba(20, 241, 149, 0)');
+        tCtx.lineTo(w * 0.72, h);
+        tCtx.lineTo(28, h);
+        tCtx.closePath();
+        tCtx.fillStyle = fillGrad;
+        tCtx.fill();
+      }
+      window.addEventListener('resize', drawTrajectory);
+      drawTrajectory();
+
+      // Subtle Randomly Moving Ambient Light Orbs
+      const bgCanvas = document.getElementById('ambient-bg-canvas');
+      const bgCtx = bgCanvas.getContext('2d');
+      const orbs = [
+        { x: 0.2, y: 0.25, vx: 0.00018, vy: 0.00014, r: 0.34, color: '124, 92, 255', alpha: 0.13 },
+        { x: 0.78, y: 0.32, vx: -0.00015, vy: 0.00017, r: 0.30, color: '20, 241, 149', alpha: 0.08 },
+        { x: 0.5, y: 0.75, vx: 0.00013, vy: -0.00016, r: 0.32, color: '255, 59, 107', alpha: 0.07 },
+        { x: 0.35, y: 0.55, vx: -0.00012, vy: -0.00011, r: 0.26, color: '124, 92, 255', alpha: 0.08 }
+      ];
+      function resizeBg() {
+        bgCanvas.width = window.innerWidth;
+        bgCanvas.height = window.innerHeight;
+      }
+      function animateAmbientBg() {
+        const w = bgCanvas.width;
+        const h = bgCanvas.height;
+        const minDim = Math.max(w, h);
+        bgCtx.clearRect(0, 0, w, h);
+        for (let i = 0; i < orbs.length; i++) {
+          const o = orbs[i];
+          o.vx += (Math.random() - 0.5) * 0.000012;
+          o.vy += (Math.random() - 0.5) * 0.000012;
+          o.vx = Math.max(-0.00028, Math.min(0.00028, o.vx));
+          o.vy = Math.max(-0.00028, Math.min(0.00028, o.vy));
+          o.x += o.vx;
+          o.y += o.vy;
+          if (o.x < 0.05 || o.x > 0.95) o.vx *= -1;
+          if (o.y < 0.05 || o.y > 0.95) o.vy *= -1;
+          const cx = o.x * w;
+          const cy = o.y * h;
+          const radius = o.r * minDim;
+          const grad = bgCtx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+          grad.addColorStop(0, `rgba(${o.color}, ${o.alpha})`);
+          grad.addColorStop(1, `rgba(${o.color}, 0)`);
+          bgCtx.fillStyle = grad;
+          bgCtx.beginPath();
+          bgCtx.arc(cx, cy, radius, 0, Math.PI * 2);
+          bgCtx.fill();
+        }
+        requestAnimationFrame(animateAmbientBg);
+      }
+      window.addEventListener('resize', resizeBg);
+      resizeBg();
+      animateAmbientBg();
+    })();
+  </script>
+</body>
+</html>
