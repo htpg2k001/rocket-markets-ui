@@ -135,7 +135,7 @@
   <div class="relative z-10 flex-1 min-w-0">
 
     <!-- VIEW 1: ORBITAL ARENA & FLOATING ACTION DOCK -->
-    <main id="view-market" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    <main id="view-market" class="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 py-8 space-y-8">
 
       <!-- Top Slim Telemetry Header -->
       <div class="flex flex-wrap items-center justify-between gap-3">
@@ -160,7 +160,7 @@
       </div>
 
       <!-- COCKPIT STAGE: Left Orbital HUD (7 cols) + Right Unified Action Dock (5 cols) -->
-      <div class="grid lg:grid-cols-12 gap-5 items-stretch">
+      <div class="grid lg:grid-cols-12 gap-6 items-stretch">
 
         <!-- Left 7 Cols: Orbital Telemetry Stage -->
         <div class="lg:col-span-7 hud-glass rounded-3xl p-5 sm:p-6 relative overflow-hidden flex flex-col justify-between min-h-[430px]">
@@ -173,17 +173,21 @@
             <div class="absolute w-72 h-72 rounded-full bg-gradient-to-tr from-ice/10 via-indigo-500/10 to-coral/10 blur-2xl"></div>
           </div>
 
-          <!-- Top HUD Metrics -->
-          <div class="relative z-10 flex items-start justify-between">
+          <!-- Top HUD Metrics + Minimalist Event Simulator Trigger -->
+          <div class="relative z-10 flex flex-wrap items-start justify-between gap-3">
             <div>
               <div class="text-[11px] font-mono uppercase tracking-wider text-gray-400">Hourly Yield</div>
-              <div class="text-4xl sm:text-5xl font-mono font-extrabold text-white tracking-tight tabular-nums mt-0.5">
+              <div id="hero-yield-display" class="text-4xl sm:text-5xl font-mono font-extrabold text-white tracking-tight tabular-nums mt-1">
                 x2.76<span class="text-lg text-mint font-semibold">/h</span>
               </div>
             </div>
-            <div class="text-right">
-              <div class="text-[11px] font-mono uppercase tracking-wider text-gray-400">Scale</div>
-              <div class="inline-flex items-center gap-1 mt-1 px-2.5 py-1 rounded-full hud-inset text-[11px] font-mono text-gray-300">
+            <div class="flex flex-col items-end gap-2">
+              <button id="sim-post-btn" type="button" class="px-3 py-1.5 rounded-full bg-white/[0.06] hover:bg-coral/20 border border-white/10 hover:border-coral/40 text-[11px] font-mono text-gray-300 hover:text-coral transition-all flex items-center gap-1.5">
+                <span>⚡</span><span id="sim-post-label">Simulate @elonmusk Post</span>
+              </button>
+              <div class="inline-flex items-center gap-1.5 text-[11px] font-mono text-gray-400">
+                <span>Scale</span>
+                <span class="text-gray-600">•</span>
                 <span>x2</span><span class="text-gray-600">→</span><span class="text-ice font-bold">x3</span><span class="text-gray-600">→</span><span>x7</span>
               </div>
             </div>
@@ -208,27 +212,27 @@
             <div class="w-20 h-20 rounded-full bg-gradient-to-br from-orange-400 via-coral to-indigo-950 shadow-2xl shadow-coral/25 border border-white/15"></div>
           </div>
 
-          <!-- Bottom HUD: Pool Tug-of-War + 29m-34m Timeline -->
-          <div class="relative z-10 space-y-3">
-            <div class="rounded-2xl hud-inset p-3.5 space-y-2">
+          <!-- Bottom HUD: Clean Borderless Pool & Timeline Strips -->
+          <div class="relative z-10 space-y-4 pt-4 border-t border-white/[0.06]">
+            <div class="space-y-2">
               <div class="flex items-center justify-between text-xs">
                 <span class="font-semibold text-mint">🚀 Survivors <strong class="font-mono text-white">$13.95</strong> <span class="text-gray-500">(16.9%)</span></span>
                 <span class="font-semibold text-coral"><span class="text-gray-500">(83.1%)</span> <strong class="font-mono text-white">$68.49</strong> Detonators 🧨</span>
               </div>
-              <div class="h-2 w-full rounded-full bg-base overflow-hidden flex">
+              <div class="h-1.5 w-full rounded-full bg-white/[0.06] overflow-hidden flex">
                 <div class="h-full bg-gradient-to-r from-ice to-mint" style="width: 16.9%"></div>
                 <div class="h-full bg-coral" style="width: 83.1%"></div>
               </div>
             </div>
 
-            <div class="flex items-center gap-2 hud-inset rounded-xl p-1.5">
-              <span class="px-2.5 py-1 rounded-lg bg-white text-base font-mono font-bold text-[11px] flex items-center gap-1 shrink-0">
+            <div class="flex items-center gap-3 text-xs font-mono">
+              <span id="stage-live-badge" class="px-2.5 py-1 rounded-full bg-white text-base font-bold text-[11px] flex items-center gap-1.5 shrink-0">
                 <span class="w-1.5 h-1.5 rounded-full bg-coral live-dot"></span>Live
               </span>
-              <div class="grid grid-cols-6 gap-1 w-full text-center text-xs font-mono">
+              <div class="grid grid-cols-6 gap-1 w-full text-center">
                 <span class="py-1 text-gray-500">29m</span>
                 <span class="py-1 text-gray-400">30m</span>
-                <span class="py-1 rounded-lg bg-coral/20 text-coral border border-coral/35 font-bold">31m</span>
+                <span class="py-1 rounded-full bg-coral/15 text-coral font-bold">31m</span>
                 <span class="py-1 text-gray-400">32m</span>
                 <span class="py-1 text-gray-400">33m</span>
                 <span class="py-1 text-gray-500">34m</span>
@@ -288,6 +292,18 @@
                 <button type="button" data-preset="2" class="preset-btn py-1.5 rounded-xl text-xs font-mono font-semibold hud-inset text-gray-400 hover:text-white">$2</button>
                 <button type="button" data-preset="5" class="preset-btn py-1.5 rounded-xl text-xs font-mono font-semibold hud-inset text-gray-400 hover:text-white">$5</button>
                 <button type="button" data-preset="10" class="preset-btn py-1.5 rounded-xl text-xs font-mono font-semibold hud-inset text-gray-400 hover:text-white">$10</button>
+              </div>
+
+              <!-- Minimalist Auto Cash-Out Target Toggle -->
+              <div class="pt-1">
+                <div class="flex items-center justify-between text-xs">
+                  <span class="text-gray-400">Auto Cash-Out Target</span>
+                  <button id="auto-cashout-toggle" type="button" class="px-2.5 py-0.5 rounded-full hud-inset text-[11px] font-mono text-gray-400 hover:text-white transition-colors">Off</button>
+                </div>
+                <div id="auto-cashout-row" class="hidden mt-2 flex items-center gap-3 hud-inset rounded-xl px-3 py-2">
+                  <input id="auto-target-slider" type="range" min="1.5" max="7.0" step="0.25" value="3.5" class="w-full accent-emerald-400" />
+                  <span id="auto-target-val" class="font-mono text-xs font-bold text-mint shrink-0">x3.50</span>
+                </div>
               </div>
             </div>
 
@@ -727,6 +743,54 @@
       });
       document.getElementById('filter-side').addEventListener('change', (e) => { state.sideFilter = e.target.value; renderHistory(); });
       document.getElementById('filter-outcome').addEventListener('change', (e) => { state.outcomeFilter = e.target.value; renderHistory(); });
+
+      // Minimalist Event Trigger Simulator
+      let roundCrashed = false;
+      document.getElementById('sim-post-btn').addEventListener('click', () => {
+        roundCrashed = !roundCrashed;
+        const yieldEl = document.getElementById('hero-yield-display');
+        const labelEl = document.getElementById('sim-post-label');
+        const badgeEl = document.getElementById('stage-live-badge');
+        if (roundCrashed) {
+          yieldEl.innerHTML = 'RESOLVED <span class="text-lg text-coral font-semibold">• Detonators Win</span>';
+          labelEl.textContent = 'Reset Live Round';
+          badgeEl.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-coral"></span>Triggered';
+          showToast('⚡ @elonmusk posted! Unredeemed Survivor stakes transferred to Detonators.', 'error');
+        } else {
+          yieldEl.innerHTML = 'x2.76<span class="text-lg text-mint font-semibold">/h</span>';
+          labelEl.textContent = 'Simulate @elonmusk Post';
+          badgeEl.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-coral live-dot"></span>Live';
+          showToast('Round reset to live tracking.');
+        }
+      });
+
+      // Auto Cash-Out Target Toggle
+      let autoTargetOn = false;
+      document.getElementById('auto-cashout-toggle').addEventListener('click', (e) => {
+        autoTargetOn = !autoTargetOn;
+        e.target.textContent = autoTargetOn ? 'Active' : 'Off';
+        e.target.className = autoTargetOn
+          ? 'px-2.5 py-0.5 rounded-full bg-mint/15 border border-mint/35 text-[11px] font-mono text-mint transition-colors'
+          : 'px-2.5 py-0.5 rounded-full hud-inset text-[11px] font-mono text-gray-400 hover:text-white transition-colors';
+        document.getElementById('auto-cashout-row').classList.toggle('hidden', !autoTargetOn);
+      });
+      document.getElementById('auto-target-slider').addEventListener('input', (e) => {
+        document.getElementById('auto-target-val').textContent = `x${Number(e.target.value).toFixed(2)}`;
+      });
+
+      // Power-User Keyboard Shortcuts (1-4 presets, Space toggle side)
+      document.addEventListener('keydown', (e) => {
+        if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+        const map = { '1': 1, '2': 2, '3': 5, '4': 10 };
+        if (map[e.key]) {
+          amtInput.value = map[e.key];
+          syncAmount();
+        } else if (e.code === 'Space' && state.view === 'market') {
+          e.preventDefault();
+          state.side = state.side === 'until' ? 'when' : 'until';
+          renderSide();
+        }
+      });
 
       // Subtle Randomly Moving Ambient Light Orbs
       const bgCanvas = document.getElementById('ambient-bg-canvas');
